@@ -1,0 +1,58 @@
+{
+  "name": "aria2-launcher",
+  "version": "1.0.0",
+  "description": "aria2 1.37.0 可视化命令行启动器",
+  "license": "GPL-2.0-only",
+  "main": "main.js",
+  "author": "WorkBuddy",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "dist:portable": "electron-builder --win portable",
+    "dist:nsis": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "com.workbuddy.aria2launcher",
+    "productName": "aria2启动器",
+    "copyright": "Copyright © 2026",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "main.js",
+      "preload.js",
+      "bin/**/*"
+    ],
+    "asarUnpack": [
+      "bin/**/*"
+    ],
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "language": "2052"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  }
+}

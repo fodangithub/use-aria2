@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>aria2 启动器</title>
+<style>
+:root{
+  --primary:#534AB7; --primary-soft:#EEEDFE; --primary-line:#AFA9EC; --primary-dark:#3C3489;
+  --bg:#f4f5f8; --card:#ffffff; --border:#e6e7ec; --border-strong:#d6d8e0;
+  --text:#20232e; --muted:#636b7a; --faint:#98a0ad;
+  --danger:#c0392b;
+  --mono:"Cascadia Code","JetBrains Mono",Consolas,"Courier New",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.55;overflow-x:hidden}
+.app{max-width:900px;margin:0 auto;padding:22px 18px 96px}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;user-select:none}
+.brand{display:flex;align-items:center;gap:11px}
+.logo{width:36px;height:36px;border-radius:10px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:600;font-family:var(--mono);font-size:13px}
+.brand h1{margin:0;font-size:16px;font-weight:600}
+.brand p{margin:1px 0 0;font-size:12px;color:var(--muted)}
+.badge{font-size:12px;color:var(--muted);background:var(--card);border:1px solid var(--border);border-radius:20px;padding:5px 12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.section{padding:20px 22px}
+.section + .section{border-top:1px solid var(--border)}
+.field + .field{margin-top:16px}
+.field label{display:block;font-size:14px;font-weight:600;margin-bottom:7px}
+.req{color:var(--danger);margin-left:3px}
+.field-row{display:flex;gap:8px}
+input[type=text]{flex:1;min-width:0;font-family:var(--mono);font-size:13px;color:var(--text);background:#fff;border:1px solid var(--border-strong);border-radius:9px;padding:10px 12px;outline:none;transition:border-color .15s,box-shadow .15s}
+input[type=text]:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(83,74,183,.12)}
+input[type=text].full{width:100%}
+button{font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border-strong);background:#fff;color:var(--text);border-radius:9px;padding:9px 15px;transition:background .15s,border-color .15s,transform .1s}
+button:hover:not(:disabled){background:#fafaff;border-color:var(--primary-line)}
+button:active:not(:disabled){transform:translateY(1px)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+button.primary:hover:not(:disabled){background:var(--primary-dark);border-color:var(--primary-dark)}
+button.ghost{border-color:transparent;background:transparent;color:var(--muted);padding:6px 10px}
+button.ghost:hover:not(:disabled){background:var(--primary-soft);color:var(--primary)}
+.hint{font-size:12px;color:var(--faint);margin:6px 0 0}
+.preview{background:#f7f7fa}
+.preview-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.preview-head .t{font-size:13px;font-weight:600;color:var(--muted)}
+.preview-head .r{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--faint)}
+.cmd{font-family:var(--mono);font-size:12.5px;line-height:1.75;color:#232733;background:#fff;border:1px solid var(--border);border-radius:9px;padding:13px 14px;word-break:break-all;white-space:pre-wrap;min-height:46px}
+.cmd .op{color:var(--primary-dark)}
+.cmd .val{color:#0b6e4f}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);overflow-x:auto;padding:0 22px}
+.tab{font-size:13px;color:var(--muted);padding:12px 13px;white-space:nowrap;cursor:pointer;border-bottom:2px solid transparent;user-select:none}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+.params{padding:18px 22px 22px}
+.panel{display:none}
+.panel.active{display:block}
+.param{display:grid;grid-template-columns:auto 210px minmax(0,1fr);align-items:center;gap:12px;padding:9px 0}
+.param + .param{border-top:1px solid #f0f1f4}
+.param .name{font-size:13px;font-weight:500}
+.param .key{font-family:var(--mono);font-size:11px;color:var(--faint);margin-left:5px}
+.param .body{display:flex;align-items:center;gap:10px;min-width:0}
+.param .body input[type=text]{padding:7px 10px;font-size:12.5px}
+.param .body .hint{margin:0}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--primary);cursor:pointer;margin:0}
+input[type=radio]{width:15px;height:15px;accent-color:var(--primary);cursor:pointer;margin:0}
+fieldset.group{border:1px solid var(--border);border-radius:10px;padding:12px 14px 14px;margin:8px 0}
+fieldset.group legend{font-size:13px;font-weight:500;padding:0 6px;display:flex;align-items:center;gap:8px}
+fieldset.group legend .key{font-family:var(--mono);font-size:11px;color:var(--faint)}
+fieldset.group .opts{display:flex;gap:22px;flex-wrap:wrap;margin-top:4px}
+fieldset.group .opts label{display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer}
+.actionbar{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);border-top:1px solid var(--border);padding:13px 0;z-index:5}
+.actionbar .inner{max-width:900px;margin:0 auto;padding:0 18px;display:flex;align-items:center;justify-content:space-between}
+.status{font-size:12px;color:var(--muted)}
+.actions{display:flex;gap:9px}
+.toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%) translateY(12px);background:#20232e;color:#fff;font-size:13px;padding:9px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:20}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:640px){.param{grid-template-columns:auto 1fr;row-gap:4px}.param .name{grid-column:2}.param .body{grid-column:2}.actionbar .inner{flex-direction:column;gap:9px;align-items:stretch}.actions{justify-content:flex-end}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">a2</div>
+      <div><h1>aria2 启动器</h1><p>可视化配置 aria2 命令行参数</p></div>
+    </div>
+    <span class="badge">v1.37.0</span>
+  </div>
+
+  <div class="card">
+    <div class="section">
+      <div class="field">
+        <label for="exeInput">aria2 可执行文件路径<span class="req">*</span></label>
+        <div class="field-row">
+          <input type="text" id="exeInput" autocomplete="off" spellcheck="false">
+          <button id="browseBtn">浏览…</button>
+        </div>
+        <p class="hint">选择 aria2c.exe 文件，已内置与 1.37.0 版本一致的可执行文件</p>
+      </div>
+      <div class="field">
+        <label for="targetInput">下载目标（URL / magnet / 种子路径）<span class="req">*</span></label>
+        <input type="text" id="targetInput" class="full" autocomplete="off" spellcheck="false">
+        <p class="hint">支持 HTTP/HTTPS、magnet 链接或本地种子文件</p>
+      </div>
+    </div>
+
+    <div class="section preview">
+      <div class="preview-head">
+        <span class="t">命令预览</span>
+        <div class="r"><span>实时更新 · 适用于 PowerShell</span><button class="ghost" id="copySmall" title="复制命令">复制</button></div>
+      </div>
+      <div class="cmd" id="cmdOut"></div>
+    </div>
+
+    <div class="params">
+      <div class="tabs" id="tabs"></div>
+      <div id="panels"></div>
+    </div>
+  </div>
+</div>
+
+<div class="actionbar">
+  <div class="inner">
+    <span class="status" id="status"></span>
+    <div class="actions">
+      <button id="copyBtn">复制</button>
+      <button class="primary" id="runBtn">终端执行</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CATEGORIES = [
+  { name:"连接与性能", params:[
+    {k:"split",label:"分片数",type:"value",def:"5",hint:"同一文件使用的连接数"},
+    {k:"max-connection-per-server",label:"单服务器连接数",type:"value",def:"1",hint:"每台服务器的最大连接数（1-16）"},
+    {k:"min-split-size",label:"最小分片大小",type:"value",def:"20M",hint:"小于此尺寸不分片，可加 K 或 M"},
+    {k:"max-concurrent-downloads",label:"并发任务数",type:"value",def:"5",hint:"同时进行的下载任务数量"},
+    {k:"optimize-concurrent-downloads",label:"自动优化并发",type:"bool",hint:"根据服务器性能自动调整并发连接"},
+    {k:"continue",label:"断点续传",type:"bool",hint:"从上次中断处继续下载"},
+    {k:"force-sequential",label:"顺序下载",type:"bool",hint:"多个地址时按顺序逐个下载"},
+    {k:"file-allocation",label:"文件分配方式",type:"radio",options:["none","prealloc","trunc","falloc"],def:"prealloc",hint:"下载前如何为文件预留磁盘空间",defOn:true}
+  ]},
+  { name:"文件与保存", params:[
+    {k:"dir",label:"下载目录",type:"value",def:"",placeholder:"D:\\Downloads",hint:"保存下载文件的目录",defOn:true,defVal:"D:\\My Downloads"},
+    {k:"out",label:"文件名",type:"value",def:"",hint:"下载后保存的文件名"},
+    {k:"allow-overwrite",label:"允许覆盖",type:"bool",hint:"允许覆盖已存在的同名文件"},
+    {k:"auto-file-renaming",label:"自动重命名",type:"bool",hint:"遇到同名文件时自动改名"},
+    {k:"remote-time",label:"保留远程时间",type:"bool",hint:"使用服务器上的文件修改时间"},
+    {k:"check-integrity",label:"校验完整性",type:"bool",hint:"下载完成后校验文件是否完整"},
+    {k:"remove-control-file",label:"清理控制文件",type:"bool",hint:"完成后删除 .aria2 控制文件"}
+  ]},
+  { name:"速度限制", params:[
+    {k:"max-download-limit",label:"单任务下载限速",type:"value",def:"0",hint:"单个任务的最大下载速度，0 为不限"},
+    {k:"max-overall-download-limit",label:"全局下载限速",type:"value",def:"0",hint:"所有任务的总下载速度上限，0 为不限"},
+    {k:"max-upload-limit",label:"单任务上传限速",type:"value",def:"0",hint:"单个 BT 任务的上传速度上限"},
+    {k:"max-overall-upload-limit",label:"全局上传限速",type:"value",def:"0",hint:"所有任务的总上传速度上限"},
+    {k:"lowest-speed-limit",label:"最低速度阈值",type:"value",def:"0",hint:"速度低于此值一段时间后自动重试"},
+    {k:"max-tries",label:"最大重试次数",type:"value",def:"5",hint:"下载失败后的重试次数，0 为无限"},
+    {k:"retry-wait",label:"重试间隔",type:"value",def:"0",hint:"两次重试之间等待的秒数"}
+  ]},
+  { name:"BT / Magnet", params:[
+    {k:"torrent-file",label:"种子文件路径",type:"value",def:"",hint:"本地 .torrent 文件的路径"},
+    {k:"follow-torrent",label:"种子下载策略",type:"radio",options:["true","false","mem"],def:"true",hint:"下载种子内文件的方式"},
+    {k:"listen-port",label:"监听端口",type:"value",def:"6881-6999",hint:"BT 使用的 TCP 端口或端口范围"},
+    {k:"enable-dht",label:"启用 DHT",type:"bool",hint:"通过 DHT 网络寻找对等节点"},
+    {k:"enable-dht6",label:"启用 IPv6 DHT",type:"bool",hint:"通过 IPv6 DHT 网络寻找节点"},
+    {k:"enable-peer-exchange",label:"启用节点交换",type:"bool",hint:"与对等节点交换地址信息"},
+    {k:"bt-max-peers",label:"最大节点数",type:"value",def:"55",hint:"每个种子连接的对等节点上限"},
+    {k:"bt-tracker",label:"Tracker 地址",type:"value",def:"",hint:"额外添加的 Tracker 服务器"},
+    {k:"seed-ratio",label:"做种分享率",type:"value",def:"1.0",hint:"达到该分享率后停止做种，0 为不限"},
+    {k:"show-files",label:"仅列出文件",type:"bool",hint:"只显示种子内的文件列表后退出"}
+  ]},
+  { name:"网络与代理", params:[
+    {k:"all-proxy",label:"全局代理",type:"value",def:"",hint:"所有协议统一使用的代理"},
+    {k:"http-proxy",label:"HTTP 代理",type:"value",def:"",hint:"仅 HTTP 请求使用的代理"},
+    {k:"https-proxy",label:"HTTPS 代理",type:"value",def:"",hint:"仅 HTTPS 请求使用的代理"},
+    {k:"proxy-method",label:"代理方式",type:"radio",options:["get","tunnel"],def:"get",hint:"向代理发送请求的方法"},
+    {k:"http-user",label:"HTTP 用户名",type:"value",def:"",hint:"HTTP 认证的用户名"},
+    {k:"http-passwd",label:"HTTP 密码",type:"value",def:"",hint:"HTTP 认证的密码"},
+    {k:"disable-ipv6",label:"禁用 IPv6",type:"bool",hint:"不使用 IPv6 网络连接"},
+    {k:"user-agent",label:"User-Agent",type:"value",def:"",hint:"请求时使用的 User-Agent"},
+    {k:"referer",label:"Referer",type:"value",def:"",hint:"请求时携带的 Referer"}
+  ]},
+  { name:"高级", params:[
+    {k:"log",label:"日志文件",type:"value",def:"",hint:"将日志写入指定的文件"},
+    {k:"log-level",label:"日志记录级别",type:"radio",options:["debug","info","warn","error"],def:"info",hint:"写入日志文件的最低级别"},
+    {k:"console-log-level",label:"控制台日志级别",type:"radio",options:["debug","info","warn","error"],def:"warn",hint:"输出到控制台的最低级别"},
+    {k:"daemon",label:"后台运行",type:"bool",hint:"以守护进程方式在后台运行"},
+    {k:"quiet",label:"静默模式",type:"bool",hint:"不向控制台输出任何信息"},
+    {k:"input-file",label:"任务列表文件",type:"value",def:"",hint:"从文件中读取下载任务"},
+    {k:"load-cookies",label:"加载 Cookie 文件",type:"value",def:"",hint:"从文件导入 Cookie"},
+    {k:"check-certificate",label:"校验证书",type:"bool",hint:"校验 HTTPS 证书是否有效"}
+  ]}
+];
+
+const $ = id => document.getElementById(id);
+const exeInput = $("exeInput"), targetInput = $("targetInput"), cmdOut = $("cmdOut");
+const PLATFORM = (window.launcher && window.launcher.platform) || 'win32';
+
+function pwshQuote(s){
+  s = String(s).trim();
+  if(s === "") return "''";
+  if(/^[A-Za-z0-9_./\\:-]+$/.test(s) && !s.includes("://")) return s;
+  return "'" + s.replace(/'/g,"''") + "'";
+}
+function highlight(cmd){
+  const esc = cmd.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  return esc.replace(/(--[\w-]+|-[a-zA-Z]\b)/g,'<span class="op">$1</span>');
+}
+function buildCommand(){
+  const parts = [];
+  if(exeInput.value.trim()) parts.push(pwshQuote(exeInput.value));
+  document.querySelectorAll(".param").forEach(p=>{
+    const en = p.querySelector(".enable");
+    if(!en || !en.checked) return;
+    const k = p.dataset.k, t = p.dataset.t;
+    if(t === "bool") parts.push("--" + k);
+    else if(t === "value"){
+      const v = p.querySelector(".val").value.trim();
+      parts.push("--" + k + "=" + pwshQuote(v));
+    } else if(t === "radio"){
+      const sel = p.querySelector("input[type=radio]:checked");
+      if(sel) parts.push("--" + k + "=" + pwshQuote(sel.value));
+    }
+  });
+  if(targetInput.value.trim()) parts.push(pwshQuote(targetInput.value));
+  return parts.filter(Boolean).join(" ");
+}
+function fullCommand(){
+  const core = buildCommand();
+  if(!core) return "";
+  return PLATFORM === 'win32' ? "& " + core : core;
+}
+function refresh(){
+  const cmd = fullCommand();
+  cmdOut.innerHTML = cmd ? highlight(cmd) : '<span style="color:#98a0ad">填写上方两项后，命令将在此生成</span>';
+  const n = document.querySelectorAll(".param .enable:checked").length;
+  $("status").textContent = "已启用 " + n + " 个参数";
+  const ok = exeInput.value.trim() && targetInput.value.trim();
+  $("copyBtn").disabled = $("copySmall").disabled = $("runBtn").disabled = !ok;
+}
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove("show"),2000);
+}
+async function copyCommand(){
+  if(!window.launcher) return;
+  await window.launcher.copyCommand(fullCommand());
+  toast("命令已复制到剪贴板");
+}
+async function runCommand(){
+  if(!window.launcher) return;
+  const res = await window.launcher.runInTerminal(fullCommand());
+  toast(res && res.ok ? "已在新终端窗口执行" : ("执行失败：" + (res && res.error || "未知错误")));
+}
+
+function render(){
+  const tabs = $("tabs"), panels = $("panels");
+  CATEGORIES.forEach((cat,ci)=>{
+    const tab = document.createElement("div");
+    tab.className = "tab" + (ci===0?" active":""); tab.textContent = cat.name;
+    const panel = document.createElement("div");
+    panel.className = "panel" + (ci===0?" active":"");
+    tab.onclick = ()=>{
+      document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
+      tab.classList.add("active"); panel.classList.add("active");
+    };
+    tabs.appendChild(tab);
+
+    cat.params.forEach(p=>{
+      const wrap = document.createElement("div");
+      wrap.className = "param"; wrap.dataset.k = p.k; wrap.dataset.t = p.type;
+      const keyTag = '<span class="key">--' + p.k + '</span>';
+      const checked = p.defOn ? " checked" : "";
+      if(p.type === "bool"){
+        wrap.innerHTML = '<input type="checkbox" class="enable"' + checked + '><div class="name">' + p.label + keyTag + '</div>' +
+          '<div class="body"><span class="hint">' + p.hint + '</span></div>';
+      } else if(p.type === "value"){
+        wrap.innerHTML = '<input type="checkbox" class="enable"' + checked + '><div class="name">' + p.label + keyTag + '</div>' +
+          '<div class="body"><input type="text" class="val" placeholder="' + (p.placeholder||p.def||"值") + '" value="' + (p.defVal!==undefined?p.defVal:(p.def||"")) + '"><span class="hint">' + p.hint + '</span></div>';
+      } else if(p.type === "radio"){
+        const opts = p.options.map(o=>'<label><input type="radio" name="r_' + p.k + '" value="' + o + '"' + (o===p.def?" checked":"") + '>' + o + '</label>').join("");
+        wrap.innerHTML = '<fieldset class="group"><legend><input type="checkbox" class="enable"' + checked + '>' + p.label + keyTag + '</legend>' +
+          '<div class="opts">' + opts + '</div><p class="hint">' + p.hint + '</p></fieldset>';
+        wrap.style.gridTemplateColumns = "1fr";
+      }
+      panel.appendChild(wrap);
+    });
+    panels.appendChild(panel);
+  });
+}
+
+async function init(){
+  render();
+  targetInput.value = "https://example.com/big file.zip?a=1&b=2";
+  [exeInput,targetInput].forEach(el=>el.addEventListener("input",refresh));
+  document.addEventListener("change",e=>{ if(e.target.matches("input")) refresh(); });
+  document.addEventListener("input",e=>{ if(e.target.classList && e.target.classList.contains("val")) refresh(); });
+  $("browseBtn").onclick = async ()=>{
+    if(!window.launcher) return;
+    const p = await window.launcher.selectExe();
+    if(p){ exeInput.value = p; refresh(); }
+  };
+  $("copyBtn").onclick = copyCommand;
+  $("copySmall").onclick = copyCommand;
+  $("runBtn").onclick = runCommand;
+  refresh();
+  if(window.launcher){
+    try {
+      const bundled = await window.launcher.getBundledExe();
+      if(bundled){ exeInput.value = bundled; refresh(); }
+    } catch(e) { /* IPC unavailable in test harness */ }
+  }
+}
+init();
+</script>
+</body>
+</html>
