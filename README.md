@@ -33,8 +33,6 @@ npm install
 npm start
 ```
 
-On Windows you can also double-click `启动.bat`.
-
 ### Rebuilding
 
 Rebuilding against the latest aria2 source must be done by an AI Agent following `AGENTS.md`. Once the parameter set is settled, the application build itself is:
